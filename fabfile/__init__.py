@@ -2,7 +2,7 @@
 
 import os
 
-from fabric.api import env, task
+from fabric.api import *
 
 from .deploy import deploy
 
@@ -48,6 +48,11 @@ env.config_filename = 'development.py'
 env.errors = []
 env.warnings = []
 
+env.repository = ''
+env.deploy_via = 'copy'
+env.cached_copy_dir = '.cached-copy'
+
+
 ROOT = os.path.join('/home', env.user)
 
 env.hosts = env.hosts or []
@@ -59,13 +64,16 @@ def __init_env__():
     """Init environment settings"""
 
     env.project_root = os.path.join(ROOT, env.env)
+    env.cached_copy = os.path.join(env.project_root, env.cached_copy_dir)
     env.venv_name = '{}.{}'.format(env.env, env.project_name)
     env.venv_root = os.path.join(ROOT, '.virtualenvs', env.venv_name)
 
     env.releases_path = os.path.join(env.project_root, env.releases_dir)
-    env.requirements = os.path.join(env.project_root, env.current,
+    env.requirements_path = os.path.join(env.project_root, env.current,
                                     env.requirements)
     env.current_path = os.path.join(env.project_root, env.current)
+    if env.keep_releases <= 0:
+        env.keep_releases = 1
 
 
 @task
@@ -90,6 +98,13 @@ def develop():
     env.env = 'dev'
     env.config_filename = 'development.py'
     __init_env__()
+
+
+@task
+def shell():
+    """Open shell to remote server"""
+    open_shell()
+
 
 develop()  # Use develop environment by default
 
